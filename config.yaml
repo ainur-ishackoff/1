@@ -1,51 +1,32 @@
-telegram:
-  tg_channel: "@your_channel"
-  tg_bot_token: "your_bot_token"
+# Основные настройки
+tg_channel: "@your_telegram_channel"  # Название канала
+tg_bot_token: "your_bot_token"        # Токен бота
+vk_token: "your_vk_token"            # Токен ВКонтакте
+vk_domain: "your_vk_domain"          # Домен ВКонтакте
 
-vk:
-  vk_token: "your_vk_token"
-  vk_domain: "your_vk_domain"
-  req_count: 20
-  time_to_sleep: 5
-  req_filter: "owner"
-  single_start: False
-  skip_ads_posts: True
-  skip_reposts: True
-  last_known_post_id: 0
-  skip_copyrighted_posts: True
+# Параметры парсинга
+req_count: 10                       # Количество постов за раз
+time_to_sleep: 3                    # Время ожидания между запросами
+req_filter: ["posts", "comments"]   # Тип контента для парсинга (posts, comments)
 
-video:
-  download: True
-  save_cover: True
-  save_time: True
-  save_resolution: True
+# Опции фильтрации контента
+blacklist: ["ссылк", "купить", "заказать"]      # Блэклист слов
+whitelist: ["python", "javascript", "programming"] # Вайтлист слов
+skip_ads_posts: true                  # Пропускать рекламные посты
+skip_reposts: true                   # Пропускать репосты
+skip_copyrighted_posts: true          # Пропускать защищённые авторским правом посты
+skip_comments_with_links: true       # Пропускать комментарии с ссылками
+author_comment_blacklist: ["https://", "t.me"]  # Блэклист ссылок в комментариях автора
 
-captions:
-  default: "Взято из: Телеграм (https://t.me/telegram)"
-  markdown: False
+# Опции публикации
+publish_links_as_hyperlinks: false    # Публиковать ссылки как гиперссылки
+default_signature: "Взято из: Телеграм (https://t.me/telegram)\n\n" # Подпись по умолчанию
+signature_format: "markdown"         # Формат подписи (markdown, plain)
 
-content_filter:
-  hyper_links: False
-  skip_types:
-    - articles
-    - products
-    - polls
-    - files
-    - music
-    - playlists
+# Опции для медиа
+download_video: true                 # Скачивать видео
+download_vk_clips: false              # Скачивать ВК клипы
 
-media:
-  download_vk_clips: True
-
-comments:
-  check_author: True
-  skip_if_link: True
-  skip_if_hyperlink: True
-
-lists:
-  blacklist:
-    - "vk.cc"
-    - "https://"
-    - "t.me"
-  whitelist:
-    - "important"
+# Дополнительные опции
+last_known_post_id: 0                 # ID последнего обработанного поста
+single_start: false                   # Запустить парсинг только один раз
