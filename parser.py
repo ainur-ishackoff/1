@@ -4,6 +4,7 @@ import yt_dlp
 import yaml
 import re
 import time
+import asyncio
 from telethon import TelegramClient, events
 from telethon.errors import PeerFloodError, UserPrivacyRestrictedError
 from telethon.tl.functions.messages import GetDialogsRequest
@@ -15,7 +16,7 @@ from telethon.errors.rpcerrorlist import (
     PhoneNumberInvalidError,
     SessionPasswordNeededError,
     FloodWaitError,
-    UserBotError
+    UserBotError,
 )
 
 with open("config.yaml", "r") as f:
@@ -26,11 +27,8 @@ vk_session = vk_api.VkApi(token=config["vk_token"])
 vk = vk_session.get_api()
 
 # Инициализация Telegram Client
-client = TelegramClient("anon", config["tg_bot_token"], "your_api_hash")
+client = TelegramClient("anon", config["api_id"], config["api_hash"])
 client.connect()
-if not client.is_user_authorized():
-    client.send_code_request(config["tg_phone_number"])
-    client.sign_in(config["tg_phone_number"], input("Enter the code: "))
 
 
 # Функции для работы с VK
@@ -44,6 +42,14 @@ def get_vk_post_by_id(post_id):
     """Получение поста ВКонтакте по ID."""
     post = vk.wall.getById(posts=post_id)
     return post[0]
+
+
+def get_vk_comments(post_id):
+    """Получение комментариев к посту ВКонтакте."""
+    comments = vk.wall.getComments(
+        owner_id=config["vk_group_id"], post_id=post_id, count=10
+    )
+    return comments["items"]
 
 
 # Функции для работы с Telegram
@@ -120,12 +126,6 @@ def process_post(post):
     if not check_whitelist(text, config["whitelist"]):
         return None
 
-    # Проверка комментария автора
-    if config["skip_comments_with_links"] and check_author_comment(
-        post["text"], config["author_comment_blacklist"]
-    ):
-        return None
-
     # Проверка на репост
     if (
         config["skip_reposts"]
@@ -173,9 +173,37 @@ def process_post(post):
     return {"text": text}
 
 
-def main():
+def process_comment(comment):
+    """Обработка комментария: фильтрация, форматирование."""
+    text = comment["text"]
+
+    # Проверка блэклиста
+    if check_blacklist(text, config["blacklist"]):
+        return None
+
+    # Проверка вайтлиста
+    if not check_whitelist(text, config["whitelist"]):
+        return None
+
+    # Проверка на наличие ссылок в комментариях
+    if config["skip_comments_with_links"] and check_author_comment(
+        text, config["author_comment_blacklist"]
+    ):
+        return None
+
+    # Форматирование ссылок
+    text = format_links(text, config["publish_links_as_hyperlinks"])
+
+    return {"text": text}
+
+
+async def main():
     """Основная функция парсера."""
     channel = config["tg_channel"]
+
+    if not await client.is_user_authorized():
+        client.send_code_request(config["tg_phone_number"])
+        client.sign_in(config["tg_phone_number"], input("Enter the code: "))
 
     while True:
         posts = get_vk_posts()
@@ -192,6 +220,16 @@ def main():
                         )
                     else:
                         send_message(channel, processed_post["text"])
+
+                # Обработка комментариев к посту
+                comments = get_vk_comments(post["id"])
+                for comment in comments:
+                    processed_comment = process_comment(comment)
+                    if processed_comment:
+                        send_message(
+                            channel, f"**Комментарий:** {processed_comment['text']}"
+                        )
+
             except Exception as e:
                 print(f"Ошибка при обработке поста: {e}")
 
@@ -203,4 +241,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
