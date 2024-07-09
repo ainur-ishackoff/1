@@ -1,0 +1,51 @@
+telegram:
+  tg_channel: "@your_channel"
+  tg_bot_token: "your_bot_token"
+
+vk:
+  vk_token: "your_vk_token"
+  vk_domain: "your_vk_domain"
+  req_count: 20
+  time_to_sleep: 5
+  req_filter: "owner"
+  single_start: False
+  skip_ads_posts: True
+  skip_reposts: True
+  last_known_post_id: 0
+  skip_copyrighted_posts: True
+
+video:
+  download: True
+  save_cover: True
+  save_time: True
+  save_resolution: True
+
+captions:
+  default: "Взято из: Телеграм (https://t.me/telegram)"
+  markdown: False
+
+content_filter:
+  hyper_links: False
+  skip_types:
+    - articles
+    - products
+    - polls
+    - files
+    - music
+    - playlists
+
+media:
+  download_vk_clips: True
+
+comments:
+  check_author: True
+  skip_if_link: True
+  skip_if_hyperlink: True
+
+lists:
+  blacklist:
+    - "vk.cc"
+    - "https://"
+    - "t.me"
+  whitelist:
+    - "important"
