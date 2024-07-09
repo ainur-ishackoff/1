@@ -1,32 +1,34 @@
 # Основные настройки
-tg_channel: "@your_telegram_channel"  # Название канала
-tg_bot_token: "your_bot_token"        # Токен бота
-vk_token: "your_vk_token"            # Токен ВКонтакте
-vk_domain: "your_vk_domain"          # Домен ВКонтакте
-
+tg_channel: "" # название тг бота
+tg_bot_token: "" # токен вашего тг бота
+vk_token: "" # ваш токен в ВК приложении
+vk_domain: "" # ваш домен в ВК приложении 
+vk_group_id: "" # ваш id сообщества вк
+tg_phone_number: "" # ваш номер телефона
+api_id: ""  # ваш api id в приложении телеграмма
+api_hash: "" # ваш api hash в приложении телеграмма
 # Параметры парсинга
-req_count: 10                       # Количество постов за раз
-time_to_sleep: 3                    # Время ожидания между запросами
-req_filter: ["posts", "comments"]   # Тип контента для парсинга (posts, comments)
+req_count: 10
+time_to_sleep: 3
 
 # Опции фильтрации контента
-blacklist: ["ссылк", "купить", "заказать"]      # Блэклист слов
-whitelist: ["python", "javascript", "programming"] # Вайтлист слов
-skip_ads_posts: true                  # Пропускать рекламные посты
-skip_reposts: true                   # Пропускать репосты
-skip_copyrighted_posts: true          # Пропускать защищённые авторским правом посты
-skip_comments_with_links: true       # Пропускать комментарии с ссылками
-author_comment_blacklist: ["https://", "t.me"]  # Блэклист ссылок в комментариях автора
+blacklist: ["ссылк", "купить", "заказать"]
+whitelist: ["python", "javascript", "programming"]
+skip_ads_posts: true
+skip_reposts: true
+skip_copyrighted_posts: true
+skip_comments_with_links: true
+author_comment_blacklist: ["https://", "t.me"]
 
 # Опции публикации
-publish_links_as_hyperlinks: false    # Публиковать ссылки как гиперссылки
-default_signature: "Взято из: Телеграм (https://t.me/telegram)\n\n" # Подпись по умолчанию
-signature_format: "markdown"         # Формат подписи (markdown, plain)
+publish_links_as_hyperlinks: false
+default_signature: "Взято из: Телеграм (https://t.me/telegram)\n\n"
+signature_format: "markdown"
 
 # Опции для медиа
-download_video: true                 # Скачивать видео
-download_vk_clips: false              # Скачивать ВК клипы
+download_video: true
+download_vk_clips: false
 
 # Дополнительные опции
-last_known_post_id: 0                 # ID последнего обработанного поста
-single_start: false                   # Запустить парсинг только один раз
+last_known_post_id: 0
+single_start: false
