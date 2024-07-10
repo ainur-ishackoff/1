@@ -1,10 +1,10 @@
 tg_channel: "" # название тг бота
-tg_bot_token: ""
-vk_token: ""
-vk_domain: "" 
-tg_phone_number: ""
-api_id: 
-api_hash: ''
+tg_bot_token: "" # токен вашего тг бота 
+vk_token: "" # ваш токен ВК приложения 
+vk_domain: "" # название вашего сообщества в ВК
+tg_phone_number: "" # номер телефона, зарегистрированный в тг
+api_id: # ваш api_id после создания приложения в тг
+api_hash: '' # ваш api_hash после создания приложения в тг
 
 req_count: 10  
 time_to_sleep: 300  
