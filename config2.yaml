@@ -1,0 +1,22 @@
+tg_channel: "" 
+tg_bot_token: ""
+vk_token: ""
+vk_domain: "" 
+tg_phone_number: ""
+api_id: 
+api_hash: ''
+
+req_count: 10  
+time_to_sleep: 300  
+single_start: false  
+skip_reposts: false  
+skip_ads_posts: false  
+skip_copyrighted_posts: false  
+download_video: false  
+default_signature: "Ваша подпись"  
+signature_format: "markdown"  
+publish_links_as_hyperlinks: true  
+blacklist: ["плохое слово 1", "плохое слово 2"]  
+whitelist: ["хорошее слово 1", "хорошее слово 2"]  
+author_comment_blacklist: ["запрещенная ссылка 1", "запрещенная ссылка 2"]  
+skip_comments_with_links: false  
