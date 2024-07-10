@@ -1,4 +1,4 @@
-tg_channel: "" 
+tg_channel: "" # название тг бота
 tg_bot_token: ""
 vk_token: ""
 vk_domain: "" 
