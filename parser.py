@@ -9,68 +9,90 @@ from telethon import TelegramClient, events
 from telethon.errors import PeerFloodError, UserPrivacyRestrictedError
 from telethon.tl.functions.messages import GetDialogsRequest
 from telethon.tl.types import InputPeerEmpty, InputPeerChannel, InputPeerUser
-from telethon.errors.rpcerrorlist import (
-    PeerFloodError,
-    UserPrivacyRestrictedError,
-    PhoneNumberBannedError,
-    PhoneNumberInvalidError,
-    SessionPasswordNeededError,
-    FloodWaitError,
-    UserBotError,
-)
+from telethon.tl.functions.messages import SendMessageRequest
+from telethon.tl.types import InputPeerUser, InputPeerChat, InputPeerChannel
 
-with open("config.yaml", "r") as f:
+# Загружаем конфигурацию из YAML-файла
+with open("config.yaml", "r", encoding="utf-8") as f:
     config = yaml.safe_load(f)
 
-# Инициализация VK API
+# Инициализируем VK API
 vk_session = vk_api.VkApi(token=config["vk_token"])
 vk = vk_session.get_api()
 
-# Инициализация Telegram Client
+# Инициализируем Telegram Client
 client = TelegramClient("anon", config["api_id"], config["api_hash"])
-client.connect()
 
 
-# Функции для работы с VK
+# Функция для получения постов ВКонтакте
 def get_vk_posts(count=config["req_count"], offset=0):
-    """Получение постов ВКонтакте."""
+    """Получает посты ВКонтакте из указанной группы."""
     posts = vk.wall.get(domain=config["vk_domain"], count=count, offset=offset)
     return posts["items"]
 
 
+# Функция для получения поста ВКонтакте по ID
 def get_vk_post_by_id(post_id):
-    """Получение поста ВКонтакте по ID."""
+    """Получает пост ВКонтакте по его ID."""
     post = vk.wall.getById(posts=post_id)
     return post[0]
 
 
+# Функция для получения комментариев к посту ВКонтакте
 def get_vk_comments(post_id):
-    """Получение комментариев к посту ВКонтакте."""
+    """Получает комментарии к посту ВКонтакте."""
     comments = vk.wall.getComments(
         owner_id=config["vk_group_id"], post_id=post_id, count=10
     )
     return comments["items"]
 
 
-# Функции для работы с Telegram
-def send_message(channel, message):
-    """Отправка сообщения в Telegram канал."""
-    client.send_message(entity=channel, message=message)
+# Функция для отправки сообщения в Telegram-канал
+async def send_message(channel, message):
+    """Отправляет сообщение в Telegram-канал с помощью бота."""
+    try:
+        if isinstance(channel, str):
+            channel = await client.get_input_entity(channel)
+
+        await client(SendMessageRequest(peer=channel, message=message))
+
+    except PeerFloodError:
+        print("Слишком много сообщений. Ожидание...")
+        time.sleep(60)
+        await send_message(channel, message)
 
 
-def send_photo(channel, photo_url):
-    """Отправка фото в Telegram канал."""
-    client.send_file(entity=channel, file=photo_url)
+# Функция для отправки фотографии в Telegram-канал
+async def send_photo(channel, photo_url):
+    """Отправляет фотографию в Telegram-канал с помощью бота."""
+    try:
+        if isinstance(channel, str):
+            channel = await client.get_input_entity(channel)
+
+        await client.send_file(entity=channel, file=photo_url)
+    except PeerFloodError:
+        print("Слишком много сообщений. Ожидание...")
+        time.sleep(60)
+        await send_photo(channel, photo_url)
 
 
-def send_video(channel, video_url, caption=None):
-    """Отправка видео в Telegram канал."""
-    client.send_file(entity=channel, file=video_url, caption=caption)
+# Функция для отправки видео в Telegram-канал
+async def send_video(channel, video_path, caption=None):
+    """Отправляет видео в Telegram-канал с помощью бота."""
+    try:
+        if isinstance(channel, str):
+            channel = await client.get_input_entity(channel)
+
+        await client.send_file(entity=channel, file=video_path, caption=caption)
+    except PeerFloodError:
+        print("Слишком много сообщений. Ожидание...")
+        time.sleep(60)
+        await send_video(channel, video_path, caption)
 
 
-# Функции для обработки контента
+# Функция для проверки, содержит ли текст слова из черного списка
 def check_blacklist(text, blacklist):
-    """Проверяет текст на наличие слов из блэклиста с учётом различных форм."""
+    """Проверяет, содержит ли текст слова из черного списка."""
     for word in blacklist:
         pattern = r"\b" + re.escape(word) + r"\b"
         if re.search(pattern, text, re.IGNORECASE):
@@ -78,8 +100,9 @@ def check_blacklist(text, blacklist):
     return False
 
 
+# Функция для проверки, содержит ли текст слова из белого списка
 def check_whitelist(text, whitelist):
-    """Проверяет текст на наличие слов из вайтлиста с учётом различных форм."""
+    """Проверяет, содержит ли текст слова из белого списка."""
     for word in whitelist:
         pattern = r"\b" + re.escape(word) + r"\b"
         if re.search(pattern, text, re.IGNORECASE):
@@ -87,16 +110,18 @@ def check_whitelist(text, whitelist):
     return False
 
 
+# Функция для проверки, содержит ли комментарий ссылки из черного списка
 def check_author_comment(comment, blacklist):
-    """Проверяет комментарий автора на наличие ссылок из блэклиста."""
+    """Проверяет, содержит ли комментарий автора ссылки из черного списка."""
     for word in blacklist:
         if word in comment:
             return True
     return False
 
 
+# Функция для форматирования ссылок в тексте
 def format_links(text, publish_as_hyperlinks):
-    """Форматирует ссылки в тексте."""
+    """Форматирует ссылки в тексте как гиперссылки или обычный текст."""
     if publish_as_hyperlinks:
         # Форматирует ссылки как гиперссылки
         return text
@@ -105,22 +130,24 @@ def format_links(text, publish_as_hyperlinks):
         return text.replace("https://", "https://").replace("t.me/", "t.me/")
 
 
+# Функция для загрузки видео с помощью yt_dlp
 def download_video(video_url):
-    """Скачивает видео с помощью yt_dlp."""
+    """Загружает видео с помощью yt_dlp."""
     with yt_dlp.YoutubeDL({"outtmpl": "%(id)s.%(ext)s"}) as ydl:
         try:
             ydl.download([video_url])
             return ydl.prepare_filename(video_url)
         except Exception as e:
-            print(f"Ошибка при скачивании видео: {e}")
+            print(f"Ошибка при загрузке видео: {e}")
             return None
 
 
+# Функция для обработки поста ВКонтакте
 def process_post(post):
-    """Обработка поста: фильтрация, скачивание видео, добавление подписи"""
+    """Обрабатывает пост ВКонтакте: фильтрация, загрузка видео, добавление подписи."""
     text = post["text"]
 
-    # Проверка блэклиста и вайтлиста
+    # Проверка черного и белого списков
     if check_blacklist(text, config["blacklist"]):
         return None
     if not check_whitelist(text, config["whitelist"]):
@@ -134,7 +161,7 @@ def process_post(post):
     ):
         return None
 
-    # Проверка на рекламный пост
+    # Проверка на рекламу
     if (
         config["skip_ads_posts"]
         and "marked_as_ads" in post
@@ -142,7 +169,7 @@ def process_post(post):
     ):
         return None
 
-    # Проверка на защищённый авторским правом пост
+    # Проверка на авторские права
     if (
         config["skip_copyrighted_posts"]
         and "can_publish" in post
@@ -173,15 +200,16 @@ def process_post(post):
     return {"text": text}
 
 
+# Функция для обработки комментария ВКонтакте
 def process_comment(comment):
-    """Обработка комментария: фильтрация, форматирование."""
+    """Обрабатывает комментарий ВКонтакте: фильтрация, форматирование."""
     text = comment["text"]
 
-    # Проверка блэклиста
+    # Проверка черного списка
     if check_blacklist(text, config["blacklist"]):
         return None
 
-    # Проверка вайтлиста
+    # Проверка белого списка
     if not check_whitelist(text, config["whitelist"]):
         return None
 
@@ -197,13 +225,22 @@ def process_comment(comment):
     return {"text": text}
 
 
+# Основная функция
 async def main():
-    """Основная функция парсера."""
+    """Основная функция для парсера."""
+    bot_token = config["tg_bot_token"]
     channel = config["tg_channel"]
 
+    await client.connect()
+
+    # Проверяем, авторизован ли клиент
     if not await client.is_user_authorized():
-        client.send_code_request(config["tg_phone_number"])
-        client.sign_in(config["tg_phone_number"], input("Enter the code: "))
+        await client.send_code_request(config["tg_phone_number"])
+        try:
+            await client.sign_in(config["tg_phone_number"], input("Введите код: "))
+        except Exception as e:
+            print(f"Ошибка авторизации: {e}")
+            return
 
     while True:
         posts = get_vk_posts()
@@ -213,27 +250,27 @@ async def main():
 
                 if processed_post:
                     if "video_path" in processed_post:
-                        send_video(
+                        await send_video(
                             channel,
                             processed_post["video_path"],
                             caption=processed_post["text"],
                         )
                     else:
-                        send_message(channel, processed_post["text"])
+                        await send_message(channel, processed_post["text"])
 
-                # Обработка комментариев к посту
+                # Обрабатываем комментарии к посту
                 comments = get_vk_comments(post["id"])
                 for comment in comments:
                     processed_comment = process_comment(comment)
                     if processed_comment:
-                        send_message(
+                        await send_message(
                             channel, f"**Комментарий:** {processed_comment['text']}"
                         )
 
             except Exception as e:
                 print(f"Ошибка при обработке поста: {e}")
 
-        # Завершение цикла при single_start
+        # Завершаем цикл, если single_start установлен в True
         if config["single_start"]:
             break
 
